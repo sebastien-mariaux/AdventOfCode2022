@@ -8,13 +8,15 @@ def import_data(sample=False):
     data = f.readlines()
     return data
 
-def solve():
-    data = import_data()
-    print(data)
 
+def solve(data):
+    pass
+
+
+def main():
+    solve(import_data(True))
+    solve(import_data(False))
 
 
 if __name__ == '__main__':
     solve()
-
-

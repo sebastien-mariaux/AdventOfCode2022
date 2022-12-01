@@ -3,7 +3,7 @@ import shutil
 
 def generate(day):
     new_folder = f"day_{day}" 
-    new_file = f"{new_folder}/day_{day}.py"
+    new_file = f"{new_folder}/1.py"
     os.mkdir(new_folder)
     shutil.copyfile("template.py", new_file)
     open(f"{new_folder}/data.txt", "x")
