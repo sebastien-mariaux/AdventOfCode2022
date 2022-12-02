@@ -5,7 +5,7 @@ import re
 def import_data(sample=False):
     dataset = 'sample_data.txt' if sample else 'data.txt'
     f = open(dataset, "r")
-    data = f.readlines()
+    data = f.read()
     return data
 
 
@@ -19,4 +19,4 @@ def main():
 
 
 if __name__ == '__main__':
-    solve()
+    main()
