@@ -7,8 +7,11 @@ def import_data(sample=False):
 
 
 def solve(data):
-    pass
-
+    for i in range(len(data)):
+        chain = data[i:i+4]
+        if len(set(chain)) == len(chain):
+            print(i+4)
+            break
 
 def main():
     solve(import_data(True))
