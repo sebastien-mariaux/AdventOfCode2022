@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 
 def import_data(sample=False):
     dataset = 'sample_data.txt' if sample else 'data.txt'
@@ -5,85 +7,53 @@ def import_data(sample=False):
     data = f.read()
     return data
 
-class Dir:
-    def __init__(self, name):
-        self.name = name
-        self.subdirs = []
-        self.files= []
 
-    def add_subdir(self, subdir):
-        self.subdirs.append(subdir)
-
-    def add_file(self, file):
-        self.files.append(file)
-
-    def get_subdirs(self):
-        return self.subdirs
-
-    def get_name(self):
-        return self.name
-
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return f"{self.name} : {self.size()} - subdirs: {self.subdirs}"
-
-    def size(self):
-        return sum([file.get_size() for file in self.files]) + sum([dir.size() for dir in self.subdirs])
-
-class File:
-    def __init__(self, size):
-        self.size = size
-
-    def get_size(self):
-        return self.size
-
-    def __str__(self):
-        return self.size
-
-    def __repr__(self):
-        return self.size
+def set_nested_keys(dirs, keys, value):
+    for key in keys + [value]:
+        dirs = dirs.setdefault(key, {})
 
 
-def find_or_create_dir(objects, name):
-    for dir in objects:
-        if dir.get_name() == name:
-            return dir
-    new_dir = Dir(name)
-    objects.append(new_dir)
-    return new_dir
+def set_file(dirs, keys, value):
+    for key in keys:
+        dirs = dirs.setdefault(key, {})
+        # dirs.setdefault('files', []).append(int(value))
+        dirs.setdefault('size', 0)
+        # dirs['size'] = sum(dirs['files'])
+        dirs['size'] += int(value)
+
+
+def get_size(dirs, acc):
+    dirs.setdefault('size', 0)
+    for k, v in dirs.items():
+        if isinstance(v, dict):
+            if v['size'] < 100000:
+                acc.append(v['size'])
+            get_size(v, acc)
+    return acc
+
 
 def solve(data):
-    objects = []
-    dirs = []
-    current_dir = None
-    for row in data.split("\n"):
+    dirs = defaultdict(list)
+    nav = []
+    for row in data.splitlines():
         row = row.split(' ')
         if row[0] == '$':
             if row[1] == 'cd':
-                if row[2] ==  '..':
-                    dirs.pop()
-                    current_dir = dirs[-1]
-                elif row[2] == '/':
-                    dirs.append(row[2])
-                    current_dir = find_or_create_dir(objects, row[2])
+                if row[2] == '/':
+                    nav = ['/']
+                elif row[2] == '..':
+                    nav.pop()
                 else:
-                    dirs.append(row[2])
-                    current_dir = find_or_create_dir(objects, row[2])
+                    nav.append(row[2])
         else:
             if row[0] == 'dir':
-                new_dir = find_or_create_dir(objects, row[1])
-                current_dir.add_subdir(new_dir)
+                pass
+                set_nested_keys(dirs, nav, row[1])
             else:
-                new_file = File(int(row[0]))
-                current_dir.add_file(new_file)
+                set_file(dirs, nav, row[0])
 
-    result = 0
-    for dir in objects:
-        if (s:= dir.size()) < 100000:
-            result += s
-    print(result)
+    print(sum(get_size(dirs, [])))
+
 
 def main():
     solve(import_data(True))
@@ -92,5 +62,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
