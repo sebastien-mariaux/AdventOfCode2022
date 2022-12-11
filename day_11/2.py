@@ -1,10 +1,12 @@
 from functools import reduce
 
+
 def import_data(sample=False):
     dataset = 'sample_data.txt' if sample else 'data.txt'
     f = open(dataset, "r")
     data = f.read()
     return data
+
 
 class Monkey:
     def __init__(self,  id, items, operation, test, if_true, if_false):
@@ -20,20 +22,17 @@ class Monkey:
         return f'{self.id} | {self.items} | {self.operation} | {self.test} | {self.if_true} | {self.if_false}'
 
     def inspect(self, item):
-        # print(f"Monkey {self.id} inspects an item with worry level {item}")
         assert item in self.items
-        self.inspect_count +=1
+        self.inspect_count += 1
 
     def compute(self, old):
         new = eval(self.operation)
-        # print(f"Worry level now {new}")
         return new
 
     def run_test(self, item):
-        if item % self.test == 0:
-            # print(f"item is thrown to monkey{self.if_true}")
+        mod = item % self.test
+        if mod == 0:
             return self.if_true
-        # print(f"item is thrown to monkey{self.if_false}")
         return self.if_false
 
     def add_item(self, item):
@@ -50,12 +49,17 @@ def solve(data):
         infos = iter(monkey.split('\n'))
         id = next(infos)[-2]
         items = next(infos).split(': ')[1].split(', ')
-        ope =  next(infos).split('= ')[1]
+        ope = next(infos).split('= ')[1]
         test = next(infos).split('by ')[1]
         if_true = next(infos)[-1]
         if_false = next(infos)[-1]
         M.append(Monkey(id, items, ope, test, if_true, if_false))
 
+    mod = reduce(lambda x, y: x*y, [m.test for m in M])
+    for m in M:
+        ope = m.operation
+        if "+" in ope:
+            m.operation = m.operation.replace("old", f"old%{mod}")
     for _ in range(10000):
         print('round', _ + 1)
         for m in M:
@@ -65,15 +69,21 @@ def solve(data):
                 next_m = m.run_test(item)
                 M[next_m].add_item(item)
             m.clear_items()
-    print(reduce(lambda x, y: x*y, sorted([m.inspect_count for m in M])[-2:]))
+    return (reduce(lambda x, y: x*y, sorted([m.inspect_count for m in M])[-2:]))
+
+
+def test_sample():
+    assert solve(import_data(True)) == 2713310158
+
+
+def test_real():
+    assert solve(import_data(False)) == 14081365540
 
 
 def main():
-    solve(import_data(True))
-    # solve(import_data(False))
+    print(solve(import_data(True)))
+    print(solve(import_data(False)))
 
-def test_sample():
-    assert solve(import_data(True)) == 10605
 
 if __name__ == '__main__':
     main()

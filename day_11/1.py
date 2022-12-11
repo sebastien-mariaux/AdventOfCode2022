@@ -20,21 +20,16 @@ class Monkey:
         return f'{self.id} | {self.items} | {self.operation} | {self.test} | {self.if_true} | {self.if_false}'
 
     def inspect(self, item):
-        print(f"Monkey {self.id} inspects an item with worry level {item}")
         assert item in self.items
         self.inspect_count +=1
 
     def compute(self, old):
         new = eval(self.operation)
-        print(f"Worry level now {new}")
-        print(f"Worry level is now {int(new/3)}")
         return int(new / 3)
 
     def run_test(self, item):
         if item % self.test == 0:
-            print(f"item is thrown to monkey{self.if_true}")
             return self.if_true
-        print(f"item is thrown to monkey{self.if_false}")
         return self.if_false
 
     def add_item(self, item):
@@ -72,9 +67,6 @@ def solve(data):
 def main():
     solve(import_data(True))
     solve(import_data(False))
-
-def test_sample():
-    assert solve(import_data(True)) == 10605
 
 if __name__ == '__main__':
     main()
