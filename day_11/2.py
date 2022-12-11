@@ -25,9 +25,9 @@ class Monkey:
         assert item in self.items
         self.inspect_count += 1
 
-    def compute(self, old):
+    def compute(self, old, mod):
         new = eval(self.operation)
-        return new
+        return new % mod
 
     def run_test(self, item):
         mod = item % self.test
@@ -59,11 +59,6 @@ def solve(data):
     # get product of all divisers used in test
     mod = reduce(lambda x, y: x*y, [m.test for m in M])
 
-    # Reduce first term of the operation when it is an addition
-    for m in M:
-        ope = m.operation
-        if "+" in ope:
-            m.operation = m.operation.replace("old", f"old%{mod}")
     # Loop over rounds
     for _ in range(10000):
         print('round', _ + 1)
@@ -71,7 +66,7 @@ def solve(data):
             # for each monkey, play as described
             for item in m.items:
                 m.inspect(item)
-                item = m.compute(item)
+                item = m.compute(item, mod)
                 next_m = m.run_test(item)
                 M[next_m].add_item(item)
             m.clear_items()
