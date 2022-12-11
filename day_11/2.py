@@ -45,6 +45,7 @@ class Monkey:
 def solve(data):
     monkeys = data.split('\n\n')
     M = []
+    # Initialisation: create the monkeys
     for monkey in monkeys:
         infos = iter(monkey.split('\n'))
         id = next(infos)[-2]
@@ -55,14 +56,19 @@ def solve(data):
         if_false = next(infos)[-1]
         M.append(Monkey(id, items, ope, test, if_true, if_false))
 
+    # get product of all divisers used in test
     mod = reduce(lambda x, y: x*y, [m.test for m in M])
+
+    # Reduce first term of the operation when it is an addition
     for m in M:
         ope = m.operation
         if "+" in ope:
             m.operation = m.operation.replace("old", f"old%{mod}")
+    # Loop over rounds
     for _ in range(10000):
         print('round', _ + 1)
         for m in M:
+            # for each monkey, play as described
             for item in m.items:
                 m.inspect(item)
                 item = m.compute(item)
