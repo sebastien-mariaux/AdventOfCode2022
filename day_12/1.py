@@ -24,21 +24,6 @@ def adjacents(point, data, nb_col, nb_row):
             and VALUES[data[i][j]] <= value + 1
             ]
 
-# def get_counts(point, counts, data, current_count, nb_col, nb_row, visited):
-#     visited.append(point)
-#     for adj in [a for a in adjacents(point, data, nb_col, nb_row) if a not in visited]:
-#         next_count = current_count
-#         next_visited = visited
-#         if adj[2] == 'E':
-#             # print(adj)
-#             next_count += 1
-#             counts.append(next_count)
-#         else:
-#             next_count += 1
-#             next_count += get_counts(adj, counts, data, next_count, nb_col, nb_row, next_visited)[1]
-#         return counts, next_count
-
-
 def solve(data):
     data = [list(el) for el in data.split('\n')]
     nb_col = len(data[0])
@@ -48,6 +33,7 @@ def solve(data):
          for i in range(nb_row) if data[i][j] == 'S'][0]
     found = False
     routes = [[S]]
+    visited = [S]
     while not found:
         count += 1
         print(count)
@@ -57,8 +43,9 @@ def solve(data):
                 if adj[2] == 'E':
                     found = True
                     break
-                if adj not in route:
-                    new_route  = route
+                if adj not in visited:
+                    visited.append(adj)
+                    new_route = route
                     new_routes.append(new_route + [adj])
         routes = new_routes
     print(count)
