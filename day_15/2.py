@@ -35,16 +35,12 @@ def solve(data, maxi):
         md = manhattan_distance(s, b)
         S[s] = md
 
-    testable = set()
     for s, md in S.items():
         top = (s[0], s[1]-md-1)
         bottom = (s[0], s[1]+md+1)
         left = (s[0] - md - 1, s[1])
         right = (s[0] + md + 1, s[1])
-        testable.add(top)
-        testable.add(bottom)
-        testable.add(right)
-        testable.add(left)
+
         # top right side
         current = top
         while current != right:
@@ -69,29 +65,7 @@ def solve(data, maxi):
             if is_winner(S, current, maxi):
                 return current[0] * 4000000 + current[1]
             current = (current[0]-1, current[1]-1)
-    print('filtering testable')
-    testable = (el for el in testable if el[0] >= 0 and el[0] <= maxi and el[1] >= 0 and el[1] <= maxi)
-    print(testable)
-    # print(len(testable))
-        # inclusion_zone -= exclusion(s, md, inclusion_zone)
-    #     e = exclusion(s, md, b, maxi)
-    #     exclusion_zone.update(e)
-    # return len([x for x in exclusion_zone if x[1] == maxi])
-    for ix, el in enumerate(testable):
-        winner = True
-        if ix % 1000 == 0:
-            print(el)
-        for s, md in S.items():
-            if manhattan_distance(s, el) <= md:
-                winner = False
-                break
-        if winner == True:
-            print(el)
-            return el[0] * 4000000 + el[1]
 
-    # assert len(inclusion_zone) == 1
-    # beacon = inclusion_zone.pop()
-    # return beacon[0] * 4000000 +beacon[1]
 
 
 # compute manhantan distance
@@ -110,11 +84,6 @@ def test_sample():
 
 def test_real():
     assert solve(import_data(False), 4000000) == 10826395253551
-
-
-# def test_exclusion():
-#     print(exclusion((8,7), 9, (0,0)))
-#     assert False
 
 
 if __name__ == '__main__':
