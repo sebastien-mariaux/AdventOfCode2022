@@ -44,7 +44,7 @@ def test_sample():
     assert solve(import_data(True), 10) == 26
 
 def test_real():
-    assert solve(import_data(False), 2000000) == 0
+    assert solve(import_data(False), 2000000) == 4793062
 
 
 # def test_exclusion():
