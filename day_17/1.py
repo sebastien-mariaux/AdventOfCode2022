@@ -24,7 +24,6 @@ def appears_at(rock, top):
         return [(3, top + 4), (3, top + 5), (3, top + 6), (3, top + 7)]
     if rock == 4:
         return [(3, top+4), (4, top+4), (3, top+5), (4, top+5)]
-    raise RuntimeError('not possible')
 
 def get_next_pos(direction, pos, blocks):
     if direction == 'R':
@@ -52,22 +51,15 @@ def solve(data):
         # activate the jets!!!
         if jet == '>':
             # block is close to right wall
-            if [x for x in pos if x[0] == 7]:
-                print('dont moves right')
-            else:
+            if not [x for x in pos if x[0] == 7]:
                 pos, _ = get_next_pos('R', pos, blocks)
         elif jet == '<':
             # block is close to left wall
-            if [x for x in pos if x[0] == 1]:
-                print('dont moves left')
-                pass
-            else:
+            if not [x for x in pos if x[0] == 1]:
                 pos, _ = get_next_pos('L', pos, blocks)
         # block falls if it can
         pos, moved = get_next_pos('D', pos, blocks)
-        if moved:
-            print('falls 1')
-        else:
+        if not moved:
             print('rocks settles at', pos)
             blocks += pos
             rock += 1
