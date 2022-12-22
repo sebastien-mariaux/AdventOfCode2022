@@ -29,7 +29,6 @@ def solve(data):
             if n in cubes:
                 adjacents[cube] -= 1
 
-    print (adjacents)
     return sum(adjacents.values())
 
 
