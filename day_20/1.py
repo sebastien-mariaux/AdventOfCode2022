@@ -19,18 +19,15 @@ def solve(data):
         d.remove(n)
         new_ix = n[1] + ix
         if new_ix >=L:
-            new_ix = new_ix % L + int(new_ix  / L)
+            new_ix = new_ix % (L-1)
         elif new_ix < 0:
-            new_ix = new_ix % L + int(new_ix  / L) -1
+            new_ix = new_ix % (L-1)
         d.insert(new_ix, n)
 
-    print(d)
     ref = next(i for i,v in enumerate(d) if v[1] == 0)
-    print(ref)
     t_1000 = d[(ref+1000)%L][1]
     t_2000 = d[(ref+2000)%L][1]
     t_3000 = d[(ref+3000)%L][1]
-    print(t_1000, t_2000, t_3000)
     return sum([t_1000, t_2000, t_3000])
 
 
