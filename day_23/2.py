@@ -1,7 +1,7 @@
 from pprint import pprint
 import re
 import itertools
-from collections import deque
+from collections import deque, defaultdict
 
 
 def import_data(sample=False):
@@ -25,18 +25,6 @@ def draw_map(elfs):
         print()
     print()
 
-def count_empty(elfs):
-    min_x = min([x for x, y in elfs])
-    max_x = max([x for x, y in elfs])
-    min_y = min([y for x, y in elfs])
-    max_y = max([y for x, y in elfs])
-    count = 0
-    for x in range(min_x, max_x+1):
-        for y in range(min_y, max_y+1):
-            if (x, y) not in elfs:
-                count += 1
-    return count
-
 def adjacents(elf):
     x, y = elf
     for i in range(x-1, x+2):
@@ -48,18 +36,18 @@ def adjacents(elf):
 def solve(data):
     R = deque(['N', 'S', 'W', 'E'])
     M = [list(row) for row in data.splitlines()]
-    elfs = []
+    elfs = set()
     for i, row in enumerate(M):
         for j, cell in enumerate(row):
             if cell == '#':
-                elfs.append((i, j))
-    draw_map(elfs)
+                elfs.add((i, j))
+    # draw_map(elfs)
 
     # starts rounds
     i =0
     while True:
         i+=1
-        next_elfs = {}
+        next_positions = defaultdict(list)
         for elf in elfs:
             # find adjacents
             adj = [a for a in adjacents(elf) if a in elfs]
@@ -71,29 +59,29 @@ def solve(data):
                 continue
             for r in R:
                 if r == 'N' and not n_adj:
-                    next_elfs[elf] = (elf[0]-1, elf[1])
+                    next_positions[(elf[0]-1, elf[1])].append(elf)
                     break
                 if r == 'S' and not s_adj:
-                    next_elfs[elf] = (elf[0]+1, elf[1])
+                    next_positions[(elf[0]+1, elf[1])].append(elf)
                     break
                 if r == 'E' and not e_adj:
-                    next_elfs[elf] = (elf[0], elf[1]+1)
+                    next_positions[(elf[0], elf[1]+1)].append(elf)
                     break
                 if r == 'W' and not w_adj:
-                    next_elfs[elf] = (elf[0], elf[1]-1)
+                    next_positions[(elf[0], elf[1]-1)].append(elf)
                     break
-        if not next_elfs:
+
+        moved = False
+        for position, elves in next_positions.items():
+            if len(elves) == 1:
+                elfs.discard(elves[0])
+                elfs.add(position)
+                moved = True
+        if not moved:
             draw_map(elfs)
             return i
-        for elf, next_elf in next_elfs.items():
-            same_target = [1 for e, ne in next_elfs.items() if ne == next_elf and e != elf]
-            if not same_target:
-                elfs.remove(elf)
-                elfs.append(next_elf)
         R.rotate(-1)
         print('== End of round ==', i)
-        if i %50 ==  0:
-            draw_map(elfs)
 
 
 def main():
