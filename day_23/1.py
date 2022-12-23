@@ -105,4 +105,4 @@ def test_sample():
 
 
 def test_real():
-    assert solve(import_data(False)) == 0
+    assert solve(import_data(False)) == 3947

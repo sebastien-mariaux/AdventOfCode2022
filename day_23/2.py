@@ -106,8 +106,8 @@ if __name__ == '__main__':
 
 
 def test_sample():
-    assert solve(import_data(True)) == 110
+    assert solve(import_data(True)) == 20
 
 
 def test_real():
-    assert solve(import_data(False)) == 0
+    assert solve(import_data(False)) == 1012
