@@ -48,7 +48,6 @@ def solve(data):
         m = re.search(expr, row)
         G[m.group(1)] = {'rate': int(m.group(2)),
                          'next': m.group(3).split(', ')}
-    print(G)
 
     # calcul des distances entre les points intéressants
     flowing = [node for node in G.keys() if G[node]['rate'] > 0]
@@ -58,7 +57,6 @@ def solve(data):
         distance_computed.append(start)
         for end in [x for x in flowing if x not in distance_computed]:
             distances[tuple(sorted([start, end]))] = distance(G, start, end)
-    print(distances)
 
     state = {
         'current': 'AA',
@@ -67,15 +65,17 @@ def solve(data):
         'relieved': 0
     }
 
-    finished = []
-    states = [state]
+    relieved = 0
+    states = deque([state])
     seen = [state]
     while states:
-        parent = states.pop()
+        parent = states.popleft()
         flow = sum([v['rate'] for k, v in G.items() if k in parent['opened']])
         if len(parent['opened']) == len(flowing):
             parent['relieved'] = parent['relieved'] + (30-parent['elapsed'])*flow
-            finished.append(parent)
+            if parent['relieved'] > relieved:
+                relieved = parent['relieved']
+                print(relieved)
             continue
         if parent['elapsed'] >= 30:
             continue
@@ -87,15 +87,23 @@ def solve(data):
                 'elapsed': parent['elapsed'] + d + 1,
                 'relieved': parent['relieved'] + flow * (d+1)
             }
-            if  next_state not in seen:
+            if next_state['elapsed'] >= 30:
+                next_state['relieved'] -= (next_state['elapsed'] - 30) * flow
+                if next_state['relieved'] > relieved:
+                    relieved = next_state['relieved']
+                    print(relieved)
+                continue
+            similar_states = [s for s in seen if s['current'] == next_state['current'] and s['elapsed'] == next_state['elapsed']]
+            similar_states_relieved = [s['relieved'] for s in similar_states]
+            if not similar_states or next_state['relieved'] > max(similar_states_relieved):
                 states.append(next_state)
             seen.append(next_state)
-    return max([el['relieved']  for el in finished])
+    return relieved
 
 
 def main():
     print(solve(import_data(True)))
-    # print(solve(import_data(False)))
+    print(solve(import_data(False)))
 
 
 if __name__ == '__main__':
