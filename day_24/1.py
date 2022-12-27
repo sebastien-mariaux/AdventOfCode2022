@@ -71,7 +71,7 @@ def solve(data):
     totals = set()
 
     def run_minute(M, col_num, row_num, end, minute):
-        if minute > 50:
+        if totals and minute > min(totals):
             return
         print(f'==== Minute {minute} ====')
         print(totals)
@@ -104,7 +104,8 @@ def solve(data):
             for valid in valid_adj:
                 next_M = new_M.copy()
                 print_map(next_M, col_num, row_num)
-                breakpoint()
+                es = [k for k, v in next_M.items() if 'E' in v]
+                print(es)
                 next_M[valid].append('E')
                 next_M[cp].remove('E')
                 run_minute(next_M, col_num, row_num, end, minute+1)
