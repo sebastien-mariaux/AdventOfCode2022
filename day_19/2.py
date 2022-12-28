@@ -13,6 +13,88 @@ def import_data(sample=False):
     return data
 
 
+def geode_state(state, geode_ore, geode_obsidian):
+    return {
+        'ore': state['ore'] + state['ore_robots'] - geode_ore,
+        'clay': state['clay'] + state['clay_robots'],
+        'obsidian': state['obsidian'] + state['obsidian_robots'] - geode_obsidian,
+        'geode': state['geode'] + state['geode_robots'],
+        'ore_robots': state['ore_robots'],
+        'clay_robots': state['clay_robots'],
+        'obsidian_robots': state['obsidian_robots'],
+        'geode_robots': state['geode_robots'] + 1,
+        'time': state['time'] + 1,
+        'skip_ore': False,
+        'skip_clay': False,
+        'skip_obsidian': False,
+    }
+
+# build no robot
+def no_state(state, can_build_ore_robot, can_build_clay_robot, can_build_obsidian_robot):
+    return {
+        'ore': state['ore'] + state['ore_robots'],
+        'clay': state['clay'] + state['clay_robots'],
+        'obsidian': state['obsidian'] + state['obsidian_robots'],
+        'geode': state['geode'] + state['geode_robots'],
+        'ore_robots': state['ore_robots'],
+        'clay_robots': state['clay_robots'],
+        'obsidian_robots': state['obsidian_robots'],
+        'geode_robots': state['geode_robots'],
+        'time': state['time'] + 1,
+        'skip_ore': can_build_ore_robot,
+        'skip_clay': can_build_clay_robot,
+        'skip_obsidian': can_build_obsidian_robot,
+    }
+
+def clay_state(state, clay_ore):
+    return {
+        'ore': state['ore'] + state['ore_robots'] - clay_ore,
+        'clay': state['clay'] + state['clay_robots'],
+        'obsidian': state['obsidian'] + state['obsidian_robots'],
+        'geode': state['geode'] + state['geode_robots'],
+        'ore_robots': state['ore_robots'],
+        'clay_robots': state['clay_robots'] + 1,
+        'obsidian_robots': state['obsidian_robots'],
+        'geode_robots': state['geode_robots'],
+        'time': state['time'] + 1,
+        'skip_ore': False,
+        'skip_clay': False,
+        'skip_obsidian': False,
+    }
+
+def ore_state(state, ore_ore):
+    return {
+        'ore': state['ore'] + state['ore_robots'] - ore_ore,
+        'clay': state['clay'] + state['clay_robots'],
+        'obsidian': state['obsidian'] + state['obsidian_robots'],
+        'geode': state['geode'] + state['geode_robots'],
+        'ore_robots': state['ore_robots'] + 1,
+        'clay_robots': state['clay_robots'],
+        'obsidian_robots': state['obsidian_robots'],
+        'geode_robots': state['geode_robots'],
+        'time': state['time'] + 1,
+        'skip_ore': False,
+        'skip_clay': False,
+        'skip_obsidian': False,
+    }
+
+def obsidian_state(state, obsidian_ore, obsidian_clay):
+    return {
+        'ore': state['ore'] + state['ore_robots'] - obsidian_ore,
+        'clay': state['clay'] + state['clay_robots'] - obsidian_clay,
+        'obsidian': state['obsidian'] + state['obsidian_robots'],
+        'geode': state['geode'] + state['geode_robots'],
+        'ore_robots': state['ore_robots'],
+        'clay_robots': state['clay_robots'],
+        'obsidian_robots': state['obsidian_robots']+1,
+        'geode_robots': state['geode_robots'],
+        'time': state['time'] + 1,
+        'skip_ore': False,
+        'skip_clay': False,
+        'skip_obsidian': False,
+    }
+
+
 def run_blueprint(bprint):
     best = 0
     max_time = 32
@@ -45,7 +127,7 @@ def run_blueprint(bprint):
         if state['time'] == max_time:
             if state['geode'] > best:
                 best = state['geode']
-                print(f"best for {bp_id} :", best)
+                # print(f"best for {bp_id} :", best)
                 # print('best', best)
             # branches_completed += 1
             continue
@@ -79,7 +161,9 @@ def run_blueprint(bprint):
             continue
 
         can_build_geode_robot = (
-            state['ore'] >= geode_ore and state['obsidian'] >= geode_obsidian and state['time'] < max_time-1)
+            state['ore'] >= geode_ore
+            and state['obsidian'] >= geode_obsidian
+            and state['time'] < max_time-1)
         can_build_obsidian_robot = (
             state['ore'] >= obsidian_ore
             and state['clay'] >= obsidian_clay
@@ -87,105 +171,37 @@ def run_blueprint(bprint):
             and not state['skip_obsidian']
             and state['time'] < max_time-2)
         can_build_clay_robot = (
-            state['ore'] >= clay_ore and state['clay_robots'] <= max_clay_robots
-            and not state['skip_clay'] and state['time'] < max_time-3)
+            state['ore'] >= clay_ore
+            and state['clay_robots'] <= max_clay_robots
+            and not state['skip_clay']
+            and state['time'] < max_time-3)
         can_build_ore_robot = (
-            state['ore'] >= ore_ore and state['ore_robots'] <= max_ore_robots
-            and not state['skip_ore'] and state['time'] < max_time-2)
-
-        geode_state ={
-            'ore': state['ore'] + state['ore_robots'] - geode_ore,
-            'clay': state['clay'] + state['clay_robots'],
-            'obsidian': state['obsidian'] + state['obsidian_robots'] - geode_obsidian,
-            'geode': state['geode'] + state['geode_robots'],
-            'ore_robots': state['ore_robots'],
-            'clay_robots': state['clay_robots'],
-            'obsidian_robots': state['obsidian_robots'],
-            'geode_robots': state['geode_robots'] + 1,
-            'time': state['time'] + 1,
-            'skip_ore': False,
-            'skip_clay': False,
-            'skip_obsidian': False,
-        }
-
-        # build no robot
-        no_state ={
-            'ore': state['ore'] + state['ore_robots'],
-            'clay': state['clay'] + state['clay_robots'],
-            'obsidian': state['obsidian'] + state['obsidian_robots'],
-            'geode': state['geode'] + state['geode_robots'],
-            'ore_robots': state['ore_robots'],
-            'clay_robots': state['clay_robots'],
-            'obsidian_robots': state['obsidian_robots'],
-            'geode_robots': state['geode_robots'],
-            'time': state['time'] + 1,
-            'skip_ore': can_build_ore_robot,
-            'skip_clay': can_build_clay_robot,
-            'skip_obsidian': can_build_obsidian_robot,
-        }
-        clay_state ={
-            'ore': state['ore'] + state['ore_robots'] - clay_ore,
-            'clay': state['clay'] + state['clay_robots'],
-            'obsidian': state['obsidian'] + state['obsidian_robots'],
-            'geode': state['geode'] + state['geode_robots'],
-            'ore_robots': state['ore_robots'],
-            'clay_robots': state['clay_robots'] + 1,
-            'obsidian_robots': state['obsidian_robots'],
-            'geode_robots': state['geode_robots'],
-            'time': state['time'] + 1,
-            'skip_ore': False,
-            'skip_clay': False,
-            'skip_obsidian': False,
-        }
-        ore_state ={
-            'ore': state['ore'] + state['ore_robots'] - ore_ore,
-            'clay': state['clay'] + state['clay_robots'],
-            'obsidian': state['obsidian'] + state['obsidian_robots'],
-            'geode': state['geode'] + state['geode_robots'],
-            'ore_robots': state['ore_robots'] + 1,
-            'clay_robots': state['clay_robots'],
-            'obsidian_robots': state['obsidian_robots'],
-            'geode_robots': state['geode_robots'],
-            'time': state['time'] + 1,
-            'skip_ore': False,
-            'skip_clay': False,
-            'skip_obsidian': False,
-        }
-        obsidian_state ={
-            'ore': state['ore'] + state['ore_robots'] - obsidian_ore,
-            'clay': state['clay'] + state['clay_robots'] - obsidian_clay,
-            'obsidian': state['obsidian'] + state['obsidian_robots'],
-            'geode': state['geode'] + state['geode_robots'],
-            'ore_robots': state['ore_robots'],
-            'clay_robots': state['clay_robots'],
-            'obsidian_robots': state['obsidian_robots']+1,
-            'geode_robots': state['geode_robots'],
-            'time': state['time'] + 1,
-            'skip_ore': False,
-            'skip_clay': False,
-            'skip_obsidian': False,
-        }
+            state['ore'] >= ore_ore
+            and state['ore_robots'] <= max_ore_robots
+            and not state['skip_ore']
+            and state['time'] < max_time-2)
 
         # Maybe order matters?
         if can_build_geode_robot:
-            states.append(geode_state)
+            states.append(geode_state(state, geode_ore, geode_obsidian))
             # assume building a geode robot  is always the best option
             continue
-        states.append(no_state)
-        if can_build_obsidian_robot:
-            states.append(obsidian_state)
+        states.append(no_state(state, can_build_ore_robot, can_build_clay_robot, can_build_obsidian_robot))
+
         if ore_ore >= clay_ore:
             if can_build_ore_robot:
-                states.append(ore_state)
+                states.append(ore_state(state, ore_ore))
             if can_build_clay_robot:
-                states.append(clay_state)
+                states.append(clay_state(state, clay_ore))
         else:
             if can_build_clay_robot:
-                states.append(clay_state)
+                states.append(clay_state(state, clay_ore))
             if can_build_ore_robot:
-                states.append(ore_state)
-
+                states.append(ore_state(state, ore_ore))
+        if can_build_obsidian_robot:
+            states.append(obsidian_state(state, obsidian_ore, obsidian_clay))
     print('==== Completed blueprint', bp_id, '====')
+    print('Best is', best)
     return bp_id * best
 
 
@@ -194,12 +210,11 @@ def solve(data):
     quality_level = 0
     with Pool(8) as p:
         quality_level = sum(p.map(run_blueprint, bprints))
-    # quality_level= run_blueprint(bprints[0])
     return quality_level
 
 
 def main():
-    print(solve(import_data(True)))
+    # print(solve(import_data(True)  ))
     print(solve(import_data(False)))
 
 
@@ -214,3 +229,4 @@ def test_sample():
 def test_real():
     assert solve(import_data(False)) == 0
 
+# not 121
