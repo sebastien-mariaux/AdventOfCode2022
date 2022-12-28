@@ -1,96 +1,117 @@
+from pprint import pprint
 import re
+import itertools
+from collections import deque
+import time
+
+
 def import_data(sample=False):
     dataset = 'sample_data.txt' if sample else 'data.txt'
     f = open(dataset, "r")
     data = f.read()
     return data
 
-class Node:
-    def __init__(self, id, node_type, parent, time):
-        self.id = id
-        self.time = time
-        self.node_type = node_type
-        self.children = []
-        self.parent = parent
-        if self.parent:
-            parent.children.append(self)
 
-    def __repr__(self) -> str:
-        return self.id
+def dijkstra(G, start):
+    nodes = G.keys()
+    N = len(nodes)
+    previous = {node: None for node in nodes}
+    used = {node: False for node in nodes}
+    distances = {node: float('inf') for node in nodes}
+    distances[start] = 0
+    remaining = [(0, start)]
+    while remaining:
+        remaining.sort(reverse=True)
+        dist_parent, parent = remaining.pop()
+        if used[parent]:
+            continue
+        used[parent] = True
+        for child in G[parent]['next']:
+            dist_child = dist_parent + 1  # in this case, all ponderation = 1
+            if dist_child < distances[child]:
+                distances[child] = dist_child
+                previous[child] = parent
+                remaining.append((dist_child, child))
+    return distances, previous
 
-def get_pressures(node, V, time, pressures, pressure):
-    time += 1
-    if time == 5 :
-         pressures.append(pressure)
-         return pressures
 
-    for t in V[node]['next']:
-        pressures += get_pressures(node, V, time, pressures, pressure)
-    if V[node]['rate'] > 0:
-        # open
-        time += 1
-        pressure += (30 - time) * V[node]['rate']
-        pressures += get_pressures(node, V, time, pressures, pressure )
-    return pressures
-
-# def get_tree(node, V, time):
-#     print(time)
-#     time += 1
-#     if time >= 3:
-#         return
-
-#     for t in V[node.id]['next']:
-#         n = Node(id=t, node_type='valve', parent=node, time=time)
-#         get_tree(n, V, time)
-#     if V[node.id]['rate'] > 0:
-#         op = Node('O', node_type='open', parent=node, time=time)
-#         time += 1
-#         for t in V[node.id]['next']:
-#             n = Node(id=t, node_type='valve', parent=op, time=time)
-#             get_tree(n, V, time)
+def distance(G, start, end):
+    distances, previous = dijkstra(G, start)
+    return distances[end]
 
 
 def solve(data):
+    # Création du graphe
     expr = r"Valve ([A-Z]{2}) has flow rate=(\d+); tunnels* leads* to valves* (.+)"
-    V = {}
-    O = set()
+    G = {}
     for row in data.splitlines():
         m = re.search(expr, row)
-        V[m.group(1)] = {'rate': int(m.group(2)), 'next': m.group(3).split(', ')}
-    pressure = 0
-    T = 1
-    # node = Node(id='AA', node_type='valve', parent=None, time=0)
-    pressures = get_pressures('AA', V, 0, [], 0)
-    print(max(pressures))
+        G[m.group(1)] = {'rate': int(m.group(2)),
+                         'next': m.group(3).split(', ')}
 
+    # calcul des distances entre les points intéressants
+    flowing = [node for node in G.keys() if G[node]['rate'] > 0]
+    distance_computed = []
+    distances = {}
+    for start in ['AA'] + flowing:
+        distance_computed.append(start)
+        for end in [x for x in flowing if x not in distance_computed]:
+            distances[tuple(sorted([start, end]))] = distance(G, start, end)
 
+    state = {
+        'current': 'AA',
+        'opened': [],
+        'elapsed': 0,
+        'relieved': 0
+    }
 
-
-        # print('current', current)
-        # print([v for v in V[current]['next'] if v not in O])
-        # #get new current
-        # tunnels = V[current]['next']
-        # if not_visited :=[v for v in V[current]['next'] if v not in O]:
-        #     current = sorted([v for v in V[current]['next'] if v not in O], key=lambda x: V[x]['rate'])[-1]
-        # else:
-        #     current = V[current]['next'][0]
-        # T+=1
-        # O.add(current)
-        # pressure += (30 - T) * V[current]['rate']
-        # T+= 1
-
-
+    relieved = 0
+    states = deque([state])
+    seen = [state]
+    while states:
+        parent = states.popleft()
+        flow = sum([v['rate'] for k, v in G.items() if k in parent['opened']])
+        if len(parent['opened']) == len(flowing):
+            parent['relieved'] = parent['relieved'] + (30-parent['elapsed'])*flow
+            if parent['relieved'] > relieved:
+                relieved = parent['relieved']
+            continue
+        if parent['elapsed'] >= 30:
+            continue
+        for node in [n for n in flowing if n != parent['current'] and n not in parent['opened']]:
+            d = distances[tuple(sorted([parent['current'], node]))]
+            next_state = {
+                'current': node,
+                'opened': parent['opened'] + [node],
+                'elapsed': parent['elapsed'] + d + 1,
+                'relieved': parent['relieved'] + flow * (d+1)
+            }
+            if next_state['elapsed'] >= 30:
+                next_state['relieved'] -= (next_state['elapsed'] - 30) * flow
+                if next_state['relieved'] > relieved:
+                    relieved = next_state['relieved']
+                continue
+            similar_states = [s for s in seen if s['current'] ==
+                              next_state['current'] and s['elapsed'] == next_state['elapsed']]
+            similar_states_relieved = [s['relieved'] for s in similar_states]
+            if not similar_states or next_state['relieved'] > max(similar_states_relieved):
+                states.append(next_state)
+            seen.append(next_state)
+    return relieved
 
 
 def main():
-    solve(import_data(True))
-    # solve(import_data(False))
+    print(solve(import_data(True)))
+    print(solve(import_data(False)))
 
 
 if __name__ == '__main__':
     main()
 
 
-
 def test_sample():
-    assert solve(import_data(False)) == 1651
+    assert solve(import_data(True)) == 1651
+
+
+def test_real():
+    assert solve(import_data(False)) == 1796

@@ -40,7 +40,59 @@ def distance(G, start, end):
     return distances[end]
 
 
+def two_partitions(S):
+    for l in range(0, int(len(S)/2)+1):
+        combis = set(itertools.combinations(S, l))
+        for c in combis:
+            yield (sorted(list(c)), sorted(list(S-set(c))))
+
+
+def walk_the_graph(MAX_TIME, G, flowing, distances):
+    state = {
+        'current': 'AA',
+        'opened': [],
+        'elapsed': 0,
+        'relieved': 0
+    }
+    relieved = 0
+    states = deque([state])
+    seen = [state]
+    while states:
+        parent = states.popleft()
+        flow = sum([v['rate'] for k, v in G.items() if k in parent['opened']])
+        if len(parent['opened']) == len(flowing):
+            parent['relieved'] = parent['relieved'] + \
+                (MAX_TIME-parent['elapsed'])*flow
+            if parent['relieved'] > relieved:
+                relieved = parent['relieved']
+            continue
+        if parent['elapsed'] >= MAX_TIME:
+            continue
+        for node in [n for n in flowing if n != parent['current'] and n not in parent['opened']]:
+            d = distances[tuple(sorted([parent['current'], node]))]
+            next_state = {
+                'current': node,
+                'opened': parent['opened'] + [node],
+                'elapsed': parent['elapsed'] + d + 1,
+                'relieved': parent['relieved'] + flow * (d+1)
+            }
+            if next_state['elapsed'] >= MAX_TIME:
+                next_state['relieved'] -= (next_state['elapsed'] -
+                                           MAX_TIME) * flow
+                if next_state['relieved'] > relieved:
+                    relieved = next_state['relieved']
+                continue
+            similar_states = [s for s in seen if s['current'] ==
+                              next_state['current'] and s['elapsed'] == next_state['elapsed']]
+            similar_states_relieved = [s['relieved'] for s in similar_states]
+            if not similar_states or next_state['relieved'] > max(similar_states_relieved):
+                states.append(next_state)
+            seen.append(next_state)
+    return relieved
+
+
 def solve(data):
+    MAX_TIME = 26
     # Création du graphe
     expr = r"Valve ([A-Z]{2}) has flow rate=(\d+); tunnels* leads* to valves* (.+)"
     G = {}
@@ -58,47 +110,16 @@ def solve(data):
         for end in [x for x in flowing if x not in distance_computed]:
             distances[tuple(sorted([start, end]))] = distance(G, start, end)
 
-    state = {
-        'current': 'AA',
-        'opened': [],
-        'elapsed': 0,
-        'relieved': 0
-    }
+    # Run algorithm after spliting flowing list in 2
+    maxi = 0
+    for elephant_job, elf_job in two_partitions(set(flowing)):
+        print(maxi)
+        elephant_result = walk_the_graph(MAX_TIME, G, elephant_job, distances)
+        elf_result = walk_the_graph(MAX_TIME, G, elf_job, distances)
+        if (tot := elephant_result + elf_result) > maxi:
+            maxi = tot
 
-    relieved = 0
-    states = deque([state])
-    seen = [state]
-    while states:
-        parent = states.popleft()
-        flow = sum([v['rate'] for k, v in G.items() if k in parent['opened']])
-        if len(parent['opened']) == len(flowing):
-            parent['relieved'] = parent['relieved'] + (30-parent['elapsed'])*flow
-            if parent['relieved'] > relieved:
-                relieved = parent['relieved']
-                print(relieved)
-            continue
-        if parent['elapsed'] >= 30:
-            continue
-        for node in [n for n in flowing if n != parent['current'] and n not in parent['opened']]:
-            d = distances[tuple(sorted([parent['current'], node]))]
-            next_state = {
-                'current': node,
-                'opened': parent['opened'] + [node],
-                'elapsed': parent['elapsed'] + d + 1,
-                'relieved': parent['relieved'] + flow * (d+1)
-            }
-            if next_state['elapsed'] >= 30:
-                next_state['relieved'] -= (next_state['elapsed'] - 30) * flow
-                if next_state['relieved'] > relieved:
-                    relieved = next_state['relieved']
-                    print(relieved)
-                continue
-            similar_states = [s for s in seen if s['current'] == next_state['current'] and s['elapsed'] == next_state['elapsed']]
-            similar_states_relieved = [s['relieved'] for s in similar_states]
-            if not similar_states or next_state['relieved'] > max(similar_states_relieved):
-                states.append(next_state)
-            seen.append(next_state)
-    return relieved
+    return maxi
 
 
 def main():
@@ -111,8 +132,8 @@ if __name__ == '__main__':
 
 
 def test_sample():
-    assert solve(import_data(True)) == 1651
+    assert solve(import_data(True)) == 1707
 
 
 def test_real():
-    assert solve(import_data(False)) == 0
+    assert solve(import_data(False)) == 1999
