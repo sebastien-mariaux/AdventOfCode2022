@@ -14,7 +14,8 @@ def import_data(sample=False):
 
 
 def run_blueprint(bprint):
-    geodes_at_time = defaultdict(lambda: 0)
+    max_time = 24
+    # geodes_at_time = defaultdict(lambda: 0)
     best = 0
     states = deque([{
         'ore': 0,
@@ -25,7 +26,10 @@ def run_blueprint(bprint):
         'clay_robots': 0,
         'obsidian_robots': 0,
         'geode_robots': 0,
-        'time': 0
+        'time': 0,
+        'skip_ore': False,
+        'skip_clay': False,
+        'skip_obsidian': False,
     }])
     expr = r"Blueprint (\d+): Each ore robot costs (\d+) ore. Each clay robot costs (\d+) ore. Each obsidian robot costs (\d+) ore and (\d+) clay. Each geode robot costs (\d+) ore and (\d+) obsidian."
     m = re.search(expr, bprint)
@@ -70,19 +74,23 @@ def run_blueprint(bprint):
             seen.append(state)
 
         time_left = 24 - state['time']
-        max_potential_geodes = state['geode'] + state['geode_robots']*time_left + sum([i for i in range(time_left)])
+        max_potential_geodes = state['geode'] + state['geode_robots'] * \
+            time_left + sum([i for i in range(time_left)])
         if max_potential_geodes <= best:
             continue
         can_build_geode_robot = (
-            state['ore'] >= geode_ore and state['obsidian'] >= geode_obsidian and state['time'] < 23 )
+            state['ore'] >= geode_ore and state['obsidian'] >= geode_obsidian and state['time'] < max_time-1)
         can_build_obsidian_robot = (
             state['ore'] >= obsidian_ore
             and state['clay'] >= obsidian_clay
-            and state['obsidian_robots'] <= max_obsidian_robots and state['time'] < 22)
+            and state['obsidian_robots'] <= max_obsidian_robots and state['time'] < max_time-2
+            and not state['skip_obsidian'])
         can_build_clay_robot = (
-            state['ore'] >= clay_ore and state['clay_robots'] <= max_clay_robots  and state['time'] < 21)
+            state['ore'] >= clay_ore and state['clay_robots'] <= max_clay_robots and state['time'] < max_time-3
+            and not state['skip_clay'])
         can_build_ore_robot = (
-            state['ore'] >= ore_ore and state['ore_robots'] <= max_ore_robots and state['time'] < 22)
+            state['ore'] >= ore_ore and state['ore_robots'] <= max_ore_robots and state['time'] < max_time-2
+            and not state['skip_ore'])
 
         if can_build_geode_robot:
             states.append({
@@ -94,7 +102,10 @@ def run_blueprint(bprint):
                 'clay_robots': state['clay_robots'],
                 'obsidian_robots': state['obsidian_robots'],
                 'geode_robots': state['geode_robots'] + 1,
-                'time': state['time'] + 1
+                'time': state['time'] + 1,
+                'skip_ore': False,
+                'skip_clay': False,
+                'skip_obsidian': False,
             })
             continue
         # build no robot
@@ -107,7 +118,10 @@ def run_blueprint(bprint):
             'clay_robots': state['clay_robots'],
             'obsidian_robots': state['obsidian_robots'],
             'geode_robots': state['geode_robots'],
-            'time': state['time'] + 1
+            'time': state['time'] + 1,
+            'skip_ore': can_build_ore_robot,
+            'skip_clay': can_build_clay_robot,
+            'skip_obsidian': can_build_obsidian_robot,
         })
         if can_build_ore_robot:
             states.append({
@@ -119,7 +133,10 @@ def run_blueprint(bprint):
                 'clay_robots': state['clay_robots'],
                 'obsidian_robots': state['obsidian_robots'],
                 'geode_robots': state['geode_robots'],
-                'time': state['time'] + 1
+                'time': state['time'] + 1,
+                'skip_ore': False,
+                'skip_clay': False,
+                'skip_obsidian': False,
             })
         if can_build_clay_robot:
             states.append({
@@ -131,7 +148,10 @@ def run_blueprint(bprint):
                 'clay_robots': state['clay_robots'] + 1,
                 'obsidian_robots': state['obsidian_robots'],
                 'geode_robots': state['geode_robots'],
-                'time': state['time'] + 1
+                'time': state['time'] + 1,
+                'skip_ore': False,
+                'skip_clay': False,
+                'skip_obsidian': False,
             })
         if can_build_obsidian_robot:
             states.append({
@@ -143,7 +163,10 @@ def run_blueprint(bprint):
                 'clay_robots': state['clay_robots'],
                 'obsidian_robots': state['obsidian_robots']+1,
                 'geode_robots': state['geode_robots'],
-                'time': state['time'] + 1
+                'time': state['time'] + 1,
+                'skip_ore': False,
+                'skip_clay': False,
+                'skip_obsidian': False,
             })
 
     print('==== Completed blueprint', bp_id, '====')
@@ -154,7 +177,7 @@ def run_blueprint(bprint):
 def solve(data):
     bprints = data.splitlines()
     quality_level = 0
-    with Pool() as p:
+    with Pool(8) as p:
         quality_level = sum(p.map(run_blueprint, bprints))
     # quality_level= run_blueprint(bprints[0])
     return quality_level
@@ -174,6 +197,6 @@ def test_sample():
 
 
 def test_real():
-    assert solve(import_data(False)) == 0
+    assert solve(import_data(False)) == 2301
 
 # not 2275
