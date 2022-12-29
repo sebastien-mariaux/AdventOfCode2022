@@ -91,10 +91,6 @@ def solve(data):
                         )
                         new_position = ((len(M) - next_valid - 1) %
                                         len(M), position[1])
-                        print(position)
-                        print(new_position)
-                        print(j)
-                        # breakpoint()
                     if M[new_position[0]][new_position[1]] in ['.', '>', '<', '^', 'v']:
                         M[new_position[0]][new_position[1]] = '^'
                         position = new_position
@@ -102,12 +98,13 @@ def solve(data):
                         break
                 if facing == 'v':
                     new_position = (position[0] + 1, position[1])
-                    if new_position[0] >= len(M) or M[new_position[0]][new_position[1]] in ['.', '>', '<', '^', 'v']:
+                    if new_position[0] >= len(M) or M[new_position[0]][new_position[1]] == ' ':
                         column = [row[new_position[1]] for row in M]
-                        next_valid = next(i for i, v in enumerate(
-                            itertools.cycle(column)) if v in ['.', '#', '>', '<', '^', 'v'] and i > position[0])
+                        next_valid = next(
+                            i for i, v in enumerate( itertools.cycle(column))
+                            if v in ['.', '#', '>', '<', '^', 'v']
+                            and i > position[0])
                         new_position = [next_valid % len(M), position[1]]
-                        print(new_position)
                     if M[new_position[0]][new_position[1]] in ['.', '>', '<', '^', 'v']:
                         M[new_position[0]][new_position[1]] = 'v'
                         position = new_position
@@ -117,13 +114,9 @@ def solve(data):
             facing = turn(facing, j)
             M[position[0]][position[1]] = facing
 
-        for row in M:
-            print(''.join(row))
-        print('last rule', j)
-        # breakpoint()
-
-    print(facing)
-    print(position)
+        # for row in M:
+        #     print(''.join(row))
+        # print('last rule', j)
 
     facing_score = {
         '>': 0,
@@ -139,7 +132,7 @@ def solve(data):
 
 
 def main():
-    # print(solve(import_data(True)))
+    print(solve(import_data(True)))
     print(solve(import_data(False)))
 
 
@@ -151,5 +144,5 @@ def test_sample():
     assert solve(import_data(True)) == 6032
 
 
-# def test_real():
-#     assert solve(import_data(False)) == 0
+def test_real():
+    assert solve(import_data(False)) == 66292

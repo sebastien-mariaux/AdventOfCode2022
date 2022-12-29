@@ -31,7 +31,7 @@ def print_map(M, i, j):
 
 
 def get_new_position(M, C, R, i, j, el):
-    ii,jj = (i, j)
+    ii, jj = (i, j)
     if el == '>':
         ii, jj = (i, j+1)
         if M[ii][jj] == ['#']:
@@ -62,16 +62,14 @@ def get_new_position(M, C, R, i, j, el):
 def solve(data):
     M = [list(map(lambda x: [] if x == '.' else [x], list(r)))
          for r in data.splitlines()]
-
     C = len(data.splitlines()[0])
     R = len(data.splitlines())
     last_row = data.splitlines()[-1]
     end = next((R-1, i) for i, el in enumerate(last_row) if el == '.')
-    # print_map(M)
-    start = (0,1)
+    start = (0, 1)
     current_time = 0
-    for start, end in [(start, end), (end,start), (start, end)]:
-        s = (start[0],start[1],current_time+1)
+    for start, end in [(start, end), (end, start), (start, end)]:
+        s = (start[0], start[1], current_time+1)
         Q = deque([s])
         seen = set()
         while Q:
@@ -92,10 +90,9 @@ def solve(data):
                             ii, jj = get_new_position(M, C, R, i, j, el)
                             new_M[ii][jj].append(el)
                 M = new_M
-                # print(minute)
                 # print_map(M, ei, ej)
             # Elf moves
-            if start == (0,1):
+            if start == (0, 1):
                 adjacents = [
                     (ei+1, ej),
                     (ei, ej+1),
@@ -112,23 +109,21 @@ def solve(data):
                     (ei, ej+1),
                 ]
             adjacents = [el for el in adjacents if el[0] >=
-                        0 and el[0] < R and el[1] >= 0 and el[1] < C]
-            valid_adj = [(i,j) for (i,j) in adjacents if not M[i][j]]
+                         0 and el[0] < R and el[1] >= 0 and el[1] < C]
+            valid_adj = [(i, j) for (i, j) in adjacents if not M[i][j]]
 
-            # If no place to go then elf is on the wrong path
             if end in valid_adj:
                 current_time = minute
                 break
 
-            for (i,j) in valid_adj:
-                Q.append((i,j, minute+1))
+            for (i, j) in valid_adj:
+                Q.append((i, j, minute+1))
     return current_time
-
 
 
 def main():
     print(solve(import_data(True)))
-    # print(solve(import_data(False)))
+    print(solve(import_data(False)))
 
 
 if __name__ == '__main__':
@@ -141,4 +136,3 @@ def test_sample():
 
 def test_real():
     assert solve(import_data(False)) == 789
-
