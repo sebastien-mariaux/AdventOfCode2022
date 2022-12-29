@@ -72,7 +72,8 @@ def solve(data):
                     if new_position[1] < 0 or M[new_position[0]][new_position[1]] == ' ':
                         row = M[new_position[0]]
                         next_valid = max(
-                            [j for j, v in enumerate(row) if v in [ '.', '>', '<', '^', 'v', '#']]
+                            [j for j, v in enumerate(row) if v in [
+                                '.', '>', '<', '^', 'v', '#']]
                         )
                         new_position = [position[0], next_valid]
                     if M[new_position[0]][new_position[1]] in ['.', '>', '<', '^', 'v']:
@@ -101,7 +102,7 @@ def solve(data):
                     if new_position[0] >= len(M) or M[new_position[0]][new_position[1]] == ' ':
                         column = [row[new_position[1]] for row in M]
                         next_valid = next(
-                            i for i, v in enumerate( itertools.cycle(column))
+                            i for i, v in enumerate(itertools.cycle(column))
                             if v in ['.', '#', '>', '<', '^', 'v']
                             and i > position[0])
                         new_position = [next_valid % len(M), position[1]]
