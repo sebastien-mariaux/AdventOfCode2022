@@ -4,7 +4,7 @@ import itertools
 from collections import deque, defaultdict
 import time
 from multiprocessing import Pool
-
+from functools import reduce
 
 def import_data(sample=False):
     dataset = 'sample_data.txt' if sample else 'data.txt'
@@ -133,6 +133,7 @@ def run_blueprint(bprint):
             continue
 
         # Check if we have a better state at this time already
+        # Probably enough to just check for equality
         better_seen_at_time = next((
             s for s in seen
             if s['time'] == state['time']
@@ -154,6 +155,7 @@ def run_blueprint(bprint):
         #     continue
         # seen.append(state)
 
+        # Thank you internet for this one
         time_left = max_time - state['time']
         max_potential_geodes = state['geode'] + state['geode_robots'] * \
             time_left + sum([i for i in range(time_left)])
@@ -182,6 +184,7 @@ def run_blueprint(bprint):
             and state['time'] < max_time-2)
 
         # Maybe order matters?
+        # not much improvment there...
         if can_build_geode_robot:
             states.append(geode_state(state, geode_ore, geode_obsidian))
             # assume building a geode robot  is always the best option
@@ -209,12 +212,13 @@ def solve(data):
     bprints = data.splitlines()[:3]
     quality_level = 0
     with Pool(8) as p:
-        quality_level = sum(p.map(run_blueprint, bprints))
+        # DIFFERENT FROM PART 1 OMG!!!
+        quality_level = reduce(lambda x,y:x*y, p.map(run_blueprint, bprints))
     return quality_level
 
 
 def main():
-    # print(solve(import_data(True)  ))
+    print(solve(import_data(True)  ))
     print(solve(import_data(False)))
 
 
@@ -223,7 +227,8 @@ if __name__ == '__main__':
 
 
 def test_sample():
-    assert solve(import_data(True)) == 180
+    #3472
+    assert solve(import_data(True)) == 62*56
 
 
 def test_real():
