@@ -6,6 +6,7 @@ import time
 from multiprocessing import Pool
 from functools import reduce
 
+
 def import_data(sample=False):
     dataset = 'sample_data.txt' if sample else 'data.txt'
     f = open(dataset, "r")
@@ -30,6 +31,8 @@ def geode_state(state, geode_ore, geode_obsidian):
     }
 
 # build no robot
+
+
 def no_state(state, can_build_ore_robot, can_build_clay_robot, can_build_obsidian_robot):
     return {
         'ore': state['ore'] + state['ore_robots'],
@@ -45,6 +48,7 @@ def no_state(state, can_build_ore_robot, can_build_clay_robot, can_build_obsidia
         'skip_clay': can_build_clay_robot,
         'skip_obsidian': can_build_obsidian_robot,
     }
+
 
 def clay_state(state, clay_ore):
     return {
@@ -62,6 +66,7 @@ def clay_state(state, clay_ore):
         'skip_obsidian': False,
     }
 
+
 def ore_state(state, ore_ore):
     return {
         'ore': state['ore'] + state['ore_robots'] - ore_ore,
@@ -77,6 +82,7 @@ def ore_state(state, ore_ore):
         'skip_clay': False,
         'skip_obsidian': False,
     }
+
 
 def obsidian_state(state, obsidian_ore, obsidian_clay):
     return {
@@ -189,7 +195,8 @@ def run_blueprint(bprint):
             states.append(geode_state(state, geode_ore, geode_obsidian))
             # assume building a geode robot  is always the best option
             continue
-        states.append(no_state(state, can_build_ore_robot, can_build_clay_robot, can_build_obsidian_robot))
+        states.append(no_state(state, can_build_ore_robot,
+                      can_build_clay_robot, can_build_obsidian_robot))
 
         if ore_ore >= clay_ore:
             if can_build_ore_robot:
@@ -205,7 +212,7 @@ def run_blueprint(bprint):
             states.append(obsidian_state(state, obsidian_ore, obsidian_clay))
     print('==== Completed blueprint', bp_id, '====')
     print('Best is', best)
-    return bp_id * best
+    return best
 
 
 def solve(data):
@@ -213,12 +220,12 @@ def solve(data):
     quality_level = 0
     with Pool(8) as p:
         # DIFFERENT FROM PART 1 OMG!!!
-        quality_level = reduce(lambda x,y:x*y, p.map(run_blueprint, bprints))
+        quality_level = reduce(lambda x, y: x*y, p.map(run_blueprint, bprints))
     return quality_level
 
 
 def main():
-    print(solve(import_data(True)  ))
+    print(solve(import_data(True)))
     print(solve(import_data(False)))
 
 
@@ -227,11 +234,11 @@ if __name__ == '__main__':
 
 
 def test_sample():
-    #3472
+    # 3472
     assert solve(import_data(True)) == 62*56
 
 
 def test_real():
-    assert solve(import_data(False)) == 0
+    # 16*38*17
+    assert solve(import_data(False)) == 10336
 
-# not 121
