@@ -10,7 +10,7 @@ def import_data(sample=False):
     data = f.read()
     return data
 
-def MAPPING(value):
+def mapping(value):
     if value == -2:
         return '='
     if value == -1:
@@ -30,7 +30,7 @@ def SNAFU(decimal):
         snafu[i] -= 5 * (remainder )
         snafu[i+1] += remainder
 
-    snafu = [MAPPING(x) for x in reversed(snafu.values())]
+    snafu = [mapping(x) for x in reversed(snafu.values())]
     return ''.join(snafu)
 
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     main()
 
 
-mapping = [
+test_mapping = [
     ['1=-0-2', 1747],
     ['12111', 906],
     ['2=0=', 198],
@@ -77,11 +77,8 @@ mapping = [
     ['122', 37],
 ]
 
-
-
-
 def test_snafu_to_decimal():
-    for snafu, decimal in mapping:
+    for snafu, decimal in test_mapping:
         assert DECIMAL(snafu) == decimal
 
 def test_snafu_simple():
@@ -91,7 +88,7 @@ def test_snafu_simple():
     assert SNAFU(10) == '20'
 
 def test_decimal_to_snafu():
-    for snafu, decimal in mapping:
+    for snafu, decimal in test_mapping:
         assert SNAFU(decimal) == snafu
 
 
