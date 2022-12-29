@@ -2,7 +2,7 @@ from pprint import pprint
 import re
 import itertools
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 from copy import deepcopy
 
 
@@ -13,7 +13,9 @@ def import_data(sample=False):
     return data
 
 
-def display(cell):
+def display(cell, E):
+    if E:
+        return 'E'
     if len(cell) == 1:
         return cell[0]
     elif len(cell) == 0:
@@ -21,9 +23,9 @@ def display(cell):
     return '+'
 
 
-def print_map(M):
-    for row in M:
-        row = [display(x) for x in row]
+def print_map(M, i, j):
+    for ii, row in enumerate(M):
+        row = [display(x, ii == i and jj == j) for jj, x in enumerate(row)]
         print(''.join(row))
     print()
 
@@ -58,73 +60,58 @@ def get_new_position(M, C, R, i, j, el):
 
 
 def solve(data):
-    # M = [[] if el == '.' else [el]
-    #      for i, row in enumerate(data.splitlines()) for j, el in enumerate(row)]
     M = [list(map(lambda x: [] if x == '.' else [x], list(r)))
          for r in data.splitlines()]
-    M[0][1] = ['E']
 
     C = len(data.splitlines()[0])
     R = len(data.splitlines())
     last_row = data.splitlines()[-1]
     end = next((R-1, i) for i, el in enumerate(last_row) if el == '.')
     best = float('inf')
-    print_map(M)
+    # print_map(M)
 
-    s = (M, 0)
-    Q = [s]
-    seen = []
+    current_time = 0
+    s = (0,1,1)
+    Q = deque([s])
+    seen = set()
     while Q:
-        state = Q.pop()
-        m, minute = state
+        state = Q.popleft()
+        ei, ej, minute = state
 
         if state in seen:
             continue
-        seen.append(state)
-
-        if minute >= best:
-            continue
+        seen.add(state)
 
         # get next position for blizzards
-        new_M = deepcopy(m)
-        for i in range(R):
-            for j in range(C):
-                for el in m[i][j]:
-                    ii, jj = get_new_position(m, C, R, i, j, el)
-                    new_M[i][j].remove(el)
-                    new_M[ii][jj].append(el)
-
+        if minute > current_time:
+            current_time = minute
+            new_M = [[[] for j in range(C)] for i in range(R)]
+            for i in range(R):
+                for j in range(C):
+                    for el in M[i][j]:
+                        ii, jj = get_new_position(M, C, R, i, j, el)
+                        new_M[ii][jj].append(el)
+            M = new_M
+            # print_map(M, ei, ej)
         # Elf moves
-        ei,ej = next((i,j) for i in range(R) for j in range(C) if m[i][j] == ['E'])
         adjacents = [
-            (ei-1, ej),
-            (ei, ej-1),
-            (ei, ej),
             (ei+1, ej),
             (ei, ej+1),
+            (ei, ej),
+            (ei-1, ej),
+            (ei, ej-1),
         ]
         adjacents = [el for el in adjacents if el[0] >=
                      0 and el[0] < R and el[1] >= 0 and el[1] < C]
-        valid_adj = [(i,j) for (i,j) in adjacents if new_M[i][j]
-                     in [[], ['E']] and (i,j) != (0, 1)]
+        valid_adj = [(i,j) for (i,j) in adjacents if not M[i][j]
+                     and (i,j) != (0, 1)]
 
         # If no place to go then elf is on the wrong path
-        if not valid_adj:
-            continue
         if end in valid_adj:
-            best = min(best, minute+1)
-            print(best)
-            continue
+            return minute
 
         for (i,j) in valid_adj:
-            next_M = deepcopy(new_M)
-            # print_map(next_M, C, R)
-            # es = [k for k, v in next_M.items() if 'E' in v]
-            next_M[ei][ej].remove('E')
-            next_M[i][j].append('E')
-
-            Q.append((next_M, minute+1))
-    return best
+            Q.append((i,j, minute+1))
 
 
 def main():
@@ -141,4 +128,5 @@ def test_sample():
 
 
 def test_real():
-    assert solve(import_data(False)) == 0
+    assert solve(import_data(False)) == 264
+
