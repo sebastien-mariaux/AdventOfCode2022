@@ -13,59 +13,63 @@ def import_data(sample=False):
     return data
 
 
-def print_map(M, col_num, row_num):
-    for i in range(row_num):
-        for j in range(col_num):
-            el = M[(i, j)]
-            if len(el) == 1:
-                print(el[0], end='')
-            elif len(el) == 0:
-                print('.', end='')
-            else:
-                print('+', end='')
-        print()
+def display(cell):
+    if len(cell) == 1:
+        return cell[0]
+    elif len(cell) == 0:
+        return '.'
+    return '+'
+
+
+def print_map(M):
+    for row in M:
+        row = [display(x) for x in row]
+        print(''.join(row))
     print()
 
 
-def get_new_position(M, col_num, row_num, position, el):
-    next_position = position
+def get_new_position(M, C, R, i, j, el):
+    ii,jj = (i, j)
     if el == '>':
-        next_position = (position[0], position[1]+1)
-        if M[next_position] == ['#']:
-            next_position = (position[0], 1)
+        ii, jj = (i, j+1)
+        if M[ii][jj] == ['#']:
+            ii, jj = (i, 1)
     elif el == '<':
-        next_position = (position[0], position[1]-1)
-        if M[next_position] == ['#']:
-            next_position = (position[0], col_num-2)
+        ii, jj = (i, j-1)
+        if M[ii][jj] == ['#']:
+            ii, jj = (i, C-2)
     elif el == '^':
-        next_position = (position[0]-1, position[1])
-        if next_position[0] < 0:
-            next_position = (row_num-2, position[1])
-        if M[next_position] == ['#']:
-            next_position = (row_num-1, position[1])
-        if M[next_position] == ['#']:
-            next_position = (row_num-2, position[1])
+        ii, jj = (i-1, j)
+        if ii < 0:
+            ii, jj = (R-2, j)
+        if M[ii][jj] == ['#']:
+            ii, jj = (R-1, j)
+        if M[ii][jj] == ['#']:
+            ii, jj = (R-2, j)
     elif el == 'v':
-        next_position = (position[0]+1, position[1])
-        if next_position[0] == row_num:
-            next_position = (0, position[1])
-        if M[next_position] == ['#']:
-            next_position = (0, position[1])
-        if M[next_position] == ['#']:
-            next_position = (1, position[1])
-    return next_position
+        ii, jj = (i+1, j)
+        if ii == R:
+            ii, jj = (0, j)
+        if M[ii][jj] == ['#']:
+            ii, jj = (0, j)
+        if M[ii][jj] == ['#']:
+            ii, jj = (1, j)
+    return ii, jj
 
 
 def solve(data):
-    M = {(i, j): [] if el == '.' else [el]
-         for i, row in enumerate(data.splitlines()) for j, el in enumerate(row)}
-    M[(0, 1)] = ['E']
+    # M = [[] if el == '.' else [el]
+    #      for i, row in enumerate(data.splitlines()) for j, el in enumerate(row)]
+    M = [list(map(lambda x: [] if x == '.' else [x], list(r)))
+         for r in data.splitlines()]
+    M[0][1] = ['E']
 
-    col_num = len(data.splitlines()[0])
-    row_num = len(data.splitlines())
+    C = len(data.splitlines()[0])
+    R = len(data.splitlines())
     last_row = data.splitlines()[-1]
-    end = next((row_num-1, i) for i, el in enumerate(last_row) if el == '.')
+    end = next((R-1, i) for i, el in enumerate(last_row) if el == '.')
     best = float('inf')
+    print_map(M)
 
     s = (M, 0)
     Q = [s]
@@ -75,47 +79,49 @@ def solve(data):
         m, minute = state
 
         if state in seen:
-            print('seen')
             continue
         seen.append(state)
 
         if minute >= best:
             continue
 
-        new_M = defaultdict(list)
-        for position, elts in m.copy().items():
-            for el in elts:
-                next_position = get_new_position(
-                    m, col_num, row_num, position, el)
-                new_M[next_position].append(el)
+        # get next position for blizzards
+        new_M = deepcopy(m)
+        for i in range(R):
+            for j in range(C):
+                for el in m[i][j]:
+                    ii, jj = get_new_position(m, C, R, i, j, el)
+                    new_M[i][j].remove(el)
+                    new_M[ii][jj].append(el)
 
         # Elf moves
-        cp = next(k for k, v in m.items() if 'E' in v)
+        ei,ej = next((i,j) for i in range(R) for j in range(C) if m[i][j] == ['E'])
         adjacents = [
-            (cp[0]-1, cp[1]),
-            (cp[0], cp[1]-1),
-            (cp[0], cp[1]),
-            (cp[0]+1, cp[1]),
-            (cp[0], cp[1]+1),
+            (ei-1, ej),
+            (ei, ej-1),
+            (ei, ej),
+            (ei+1, ej),
+            (ei, ej+1),
         ]
         adjacents = [el for el in adjacents if el[0] >=
-                     0 and el[0] < row_num and el[1] >= 0 and el[1] < col_num]
-        valid_adj = [el for el in adjacents if new_M[el]
-                     in [[], ['E']] and el != (0, 1)]
+                     0 and el[0] < R and el[1] >= 0 and el[1] < C]
+        valid_adj = [(i,j) for (i,j) in adjacents if new_M[i][j]
+                     in [[], ['E']] and (i,j) != (0, 1)]
+
         # If no place to go then elf is on the wrong path
         if not valid_adj:
             continue
         if end in valid_adj:
             best = min(best, minute+1)
             print(best)
-
             continue
-        for valid in valid_adj:
+
+        for (i,j) in valid_adj:
             next_M = deepcopy(new_M)
-            # print_map(next_M, col_num, row_num)
+            # print_map(next_M, C, R)
             # es = [k for k, v in next_M.items() if 'E' in v]
-            next_M[valid].append('E')
-            next_M[cp].remove('E')
+            next_M[ei][ej].remove('E')
+            next_M[i][j].append('E')
 
             Q.append((next_M, minute+1))
     return best
