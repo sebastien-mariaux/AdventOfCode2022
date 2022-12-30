@@ -35,6 +35,7 @@ def solve(data):
     M, I = data.split('\n\n')
     M = [list(row) for row in M.splitlines()]
 
+
     width = max([len(row) for row in M])
     for row in M:
         if len(row) < width:
